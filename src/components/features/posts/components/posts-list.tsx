@@ -70,7 +70,7 @@ const PostsList = () => {
       </div>
 
       <div className="grid gap-4">
-        {postsData?.data.map((post) => (
+        {/* {postsData?.data.map((post) => (
           <Card key={post.id}>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">{post.title}</CardTitle>
@@ -98,7 +98,7 @@ const PostsList = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
+        ))} */}
       </div>
 
       {postsData?.pagination && (

@@ -1,68 +1,142 @@
 "use client";
 
 import React from "react";
-import PostsList from "@/components/features/posts/components/posts-list";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { loginSchema, LoginInput } from "@/lib/validations/auth.schemas";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { authService } from "@/components/features/auth/services/auth-service";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
-const Home = () => {
+const Login = () => {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  // React Hook Form with Zod validation
+  const form = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  // TanStack Query mutation
+  const loginMutation = useMutation({
+    mutationFn: (credentials: LoginInput) => authService.login(credentials),
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: "Login successful!",
+      });
+
+      // Redirect based on user role
+      if (data.user.role === "admin") {
+        router.push("/dashboard");
+      } else {
+        router.push("/home");
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Login failed",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Form submission handler
+  const onSubmit = (data: LoginInput) => {
+    loginMutation.mutate(data);
+  };
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">
-          Next.js with Axios API Client
-        </h1>
-        <p className="text-lg text-muted-foreground mb-8">
-          Professional API integration with TypeScript, React Query, and error
-          handling
-        </p>
-      </div>
+    <div className="flex items-center justify-center flex-col h-dvh w-dvw bg-accent space-y-2 px-4">
+      <h1 className="text-2xl sm:text-3xl font-bold text-center">
+        Welcome to <span className="text-primary">POSTS</span>
+      </h1>
+      <Card className="w-full sm:max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center">Log into your account</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="Enter your email"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              🚀 Axios Integration
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Full-featured HTTP client with interceptors, automatic token
-              handling, and error management
-            </p>
-          </CardContent>
-        </Card>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Enter your password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              🔄 React Query
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Powerful data fetching with caching, background updates, and
-              optimistic mutations
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              📝 Type Safety
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Full TypeScript integration with Zod validation and type inference
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <PostsList />
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
-export default Home;
+export default Login;
