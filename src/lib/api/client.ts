@@ -1,5 +1,8 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
+
 import { ApiResponse, QueryParams } from "@/types";
+import { config } from "zod/v4/core";
+import { error } from "console";
 
 export class ApiError extends Error {
   constructor(
@@ -17,7 +20,8 @@ class ApiClient {
 
   constructor() {
     this.axiosInstance = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_URL || "/api",
+      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "/api",
+      withCredentials: true,
       timeout: 10000,
       headers: {
         "Content-Type": "application/json",
@@ -26,143 +30,88 @@ class ApiClient {
 
     this.setupInterceptors();
   }
-
   private setupInterceptors() {
-    // Request interceptor
     this.axiosInstance.interceptors.request.use(
-      (config) => {
-        // Add auth token if available
-        const token = this.getToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
+      (config) => config,
+      (error: AxiosError) => {
+        return Promise.reject(error);
+      }
     );
 
-    // Response interceptor
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => response,
-      (error: AxiosError) => {
+      async (error: AxiosError) => {
+        const orgRequest = error.config as any;
+        if (error.response?.status === 401 && !orgRequest?._retry) {
+          orgRequest._retry = true;
+          try {
+            await this.axiosInstance.post("/auth/refresh");
+            return this.axiosInstance(orgRequest);
+          } catch (refreshError) {
+            return Promise.reject(refreshError);
+          }
+        }
         if (error.response) {
           const { status, data } = error.response;
           throw new ApiError(
-            (data as any)?.message || "Request failed",
+            (data as any)?.message || "An error occurred",
             status,
-            (data as any)?.errors
+            (data as any)?.errors || undefined
           );
         } else if (error.request) {
-          throw new ApiError("Network error", 0);
+          throw new ApiError("No response received from server", 500);
         } else {
-          throw new ApiError("Request setup error", 0);
+          throw new ApiError(error.message, 500);
         }
       }
     );
   }
 
-  private getToken(): string | null {
-    // Get token from localStorage, cookies, or other storage
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("auth_token");
-    }
-    return null;
-  }
-
-  setToken(token: string) {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("auth_token", token);
-    }
-  }
-
-  clearToken() {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("auth_token");
-    }
-  }
-  async get<T>(
-    endpoint: string,
-    params?: QueryParams
-  ): Promise<ApiResponse<T>> {
-    const response = await this.axiosInstance.get<ApiResponse<T>>(endpoint, {
+  async get<T>(url: string, params?: QueryParams): Promise<ApiResponse<T>> {
+    const response = await this.axiosInstance.get<ApiResponse<T>>(url, {
       params,
     });
     return response.data;
   }
-
-  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-    const response = await this.axiosInstance.post<ApiResponse<T>>(
-      endpoint,
-      data
-    );
-    return response.data;
-  }
-
-  async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-    const response = await this.axiosInstance.put<ApiResponse<T>>(
-      endpoint,
-      data
-    );
-    return response.data;
-  }
-
-  async patch<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-    const response = await this.axiosInstance.patch<ApiResponse<T>>(
-      endpoint,
-      data
-    );
-    return response.data;
-  }
-
-  async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-    const response = await this.axiosInstance.delete<ApiResponse<T>>(endpoint);
-    return response.data;
-  }
-
-  // File upload method
-  async uploadFile<T>(
-    endpoint: string,
-    file: File,
-    onProgress?: (progress: number) => void
+  async post<T>(
+    url: string,
+    data?: any,
+    params?: QueryParams
   ): Promise<ApiResponse<T>> {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await this.axiosInstance.post<ApiResponse<T>>(
-      endpoint,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        onUploadProgress: (progressEvent) => {
-          if (onProgress && progressEvent.total) {
-            const progress = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            onProgress(progress);
-          }
-        },
-      }
-    );
-
+    const response = await this.axiosInstance.post<ApiResponse<T>>(url, data, {
+      params,
+    });
     return response.data;
   }
-
-  // Download file method
-  async downloadFile(endpoint: string, filename?: string): Promise<void> {
-    const response = await this.axiosInstance.get(endpoint, {
-      responseType: "blob",
+  async patch<T>(
+    url: string,
+    data?: any,
+    params?: QueryParams
+  ): Promise<ApiResponse<T>> {
+    const response = await this.axiosInstance.patch<ApiResponse<T>>(url, data, {
+      params,
     });
-
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    return response.data;
+  }
+  async delete<T>(url: string, params?: QueryParams): Promise<ApiResponse<T>> {
+    const response = await this.axiosInstance.delete<ApiResponse<T>>(url, {
+      params,
+    });
+    return response.data;
+  }
+  async downloadFile(url: string, filename: string): Promise<void> {
+    const res = await this.axiosInstance.get(url, { responseType: "blob" });
+    const blob = new Blob([res.data], { type: res.headers["content-type"] });
     const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", filename || "download");
+    link.href = window.URL.createObjectURL(blob);
+    link.setAttribute("download", filename);
     document.body.appendChild(link);
     link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(link.href);
+  }
+  get axios() {
+    return this.axiosInstance;
   }
 }
 

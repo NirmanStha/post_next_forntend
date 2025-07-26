@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { postsService } from "../services/posts-service";
 import { PostInput, PostFilter } from "@/lib/validations/post.schemas";
 import { Post } from "@/types/post.types";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // Query keys
 export const POSTS_QUERY_KEYS = {
@@ -66,7 +66,6 @@ export const useSearchPosts = (query: string) => {
 // Mutations
 export const useCreatePost = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: (data: PostInput) => postsService.createPost(data),
@@ -74,24 +73,16 @@ export const useCreatePost = () => {
       // Invalidate posts queries
       queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
 
-      toast({
-        title: "Success",
-        description: "Post created successfully",
-      });
+      toast.success("Post created successfully");
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create post",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to create post");
     },
   });
 };
 
 export const useUpdatePost = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<PostInput> }) =>
@@ -106,24 +97,16 @@ export const useUpdatePost = () => {
       // Invalidate posts lists
       queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
 
-      toast({
-        title: "Success",
-        description: "Post updated successfully",
-      });
+      toast.success("Post updated successfully");
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update post",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to update post");
     },
   });
 };
 
 export const useDeletePost = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: (id: string) => postsService.deletePost(id),
@@ -136,24 +119,16 @@ export const useDeletePost = () => {
       // Invalidate lists
       queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
 
-      toast({
-        title: "Success",
-        description: "Post deleted successfully",
-      });
+      toast.success("Post deleted successfully");
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete post",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to delete post");
     },
   });
 };
 
 export const usePublishPost = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: (id: string) => postsService.publishPost(id),
@@ -164,24 +139,15 @@ export const usePublishPost = () => {
       );
       queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEYS.lists() });
 
-      toast({
-        title: "Success",
-        description: "Post published successfully",
-      });
+      toast.success("Post published successfully");
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to publish post",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to publish post");
     },
   });
 };
 
 export const useUploadPostImage = () => {
-  const { toast } = useToast();
-
   return useMutation({
     mutationFn: ({
       file,
@@ -190,12 +156,11 @@ export const useUploadPostImage = () => {
       file: File;
       onProgress?: (progress: number) => void;
     }) => postsService.uploadPostImage(file, onProgress),
+    onSuccess: () => {
+      toast.success("Image uploaded successfully");
+    },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to upload image",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to upload image");
     },
   });
 };
