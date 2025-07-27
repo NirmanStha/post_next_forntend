@@ -4,20 +4,27 @@ export const API_ENDPOINTS = {
     REGISTER: "/auth/register",
     LOGOUT: "/auth/logout",
     REFRESH: "/auth/refresh",
-    PROFILE: "/auth/profile",
   },
   POSTS: {
     LIST: "/posts",
-    CREATE: "/posts",
+    CREATE: "/posts/upload",
     DETAIL: (id: string) => `/posts/${id}`,
     UPDATE: (id: string) => `/posts/${id}`,
     DELETE: (id: string) => `/posts/${id}`,
   },
   USERS: {
-    LIST: "/users",
+    LIST: "/user",
+    PROFILE: "/user/profile",
     DETAIL: (id: string) => `/users/${id}`,
     UPDATE: (id: string) => `/users/${id}`,
     DELETE: (id: string) => `/users/${id}`,
+    USERPROFILE: (id: string) => `/users/${id}`,
+  },
+  COMMENTS: {
+    LIST: (postId: string) => `/posts/${postId}/comments`,
+    CREATE: (postId: string) => `/posts/${postId}/comments`,
+    UPDATE: (commentId: string) => `/comments/${commentId}`,
+    DELETE: (commentId: string) => `/comments/${commentId}`,
   },
 } as const;
 
@@ -40,15 +47,15 @@ export const APP_ROUTES = {
   POSTS: {
     LIST: "/posts",
     DETAIL: (id: string) => `/posts/${id}`,
-    CREATE: "/posts/create",
+    CREATE: "/posts/upload",
     EDIT: (id: string) => `/posts/${id}/edit`,
   },
 } as const;
 
-export const ROLES = {
-  ADMIN: "admin",
-  USER: "user",
-} as const;
+// export const ROLES = {
+//   ADMIN: "admin",
+//   USER: "user",
+// } as const;
 
 export const POST_CATEGORIES = [
   { value: "technology", label: "Technology" },

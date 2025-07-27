@@ -2,8 +2,9 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  // role: "admin" | "user";
-  avatar?: string;
+  role: "admin" | "user";
+  username: string;
+  profilePicture?: string;
   bio?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -26,10 +27,17 @@ export interface RegisterCredentials {
   email: string;
   password: string;
   confirmPassword: string;
+  username: string;
+  profilePicture?: string;
 }
 
 export interface AuthResponse {
-  user: User;
-  token: string;
-  refreshToken?: string;
+  user: Omit<User, "password">;
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
 }

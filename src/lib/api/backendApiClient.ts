@@ -1,5 +1,4 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
-import { get } from "http";
 
 class BackendApiClient {
   private axiosInstance: AxiosInstance;
@@ -40,10 +39,13 @@ class BackendApiClient {
     const response = await this.axiosInstance.put<T>(url, data);
     return response;
   }
+  async patch<T>(url: string, data?: any): Promise<AxiosResponse<T>> {
+    const response = await this.axiosInstance.patch<T>(url, data);
+    return response;
+  }
   async delete<T>(url: string): Promise<AxiosResponse<T>> {
     const response = await this.axiosInstance.delete<T>(url);
     return response;
   }
 }
 export const apiClient = new BackendApiClient();
-import { useMutation, useQueryClient } from "@tanstack/react-query";

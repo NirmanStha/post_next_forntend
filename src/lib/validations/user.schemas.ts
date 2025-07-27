@@ -11,8 +11,7 @@ export const userUpdateSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").optional(),
   email: z.string().email("Invalid email address").optional(),
   bio: z.string().max(500, "Bio is too long").optional(),
-  avatar: z.string().url("Invalid avatar URL").optional(),
-  role: z.enum(["admin", "user"]).optional(),
+  profilePicture: z.string().url("Invalid profile picture URL").optional(),
 });
 
 export type UserProfile = z.infer<typeof userProfileSchema>;

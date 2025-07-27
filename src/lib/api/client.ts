@@ -1,8 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
 
 import { ApiResponse, QueryParams } from "@/types";
-import { config } from "zod/v4/core";
-import { error } from "console";
 
 export class ApiError extends Error {
   constructor(
@@ -67,9 +65,14 @@ class ApiClient {
     );
   }
 
-  async get<T>(url: string, params?: QueryParams): Promise<ApiResponse<T>> {
+  async get<T>(
+    url: string,
+    params?: QueryParams,
+    options?: any
+  ): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.get<ApiResponse<T>>(url, {
       params,
+      ...options,
     });
     return response.data;
   }
