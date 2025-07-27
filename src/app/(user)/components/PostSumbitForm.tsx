@@ -1,5 +1,5 @@
 "use client";
-import { postsService } from "@/components/features/posts/services/posts-service";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,38 +47,6 @@ const PostSubmitForm = () => {
       filenames: [],
     },
   });
-
-  const postPost = useMutation({
-    mutationFn: (data: PostInput) => postsService.createPost(data),
-    onSuccess: (response) => {
-      form.reset({
-        title: "",
-        content: "",
-        filenames: [],
-      });
-
-      imageUrls.forEach((url) => URL.revokeObjectURL(url));
-      setSelectedImages([]);
-      setImageUrls([]);
-      setIsFocused(false);
-      toast.success("Post created successfully");
-    },
-    onError: (error: any) => {
-      toast.error(
-        "Failed to create post: " + (error.message || "Unknown error")
-      );
-    },
-  });
-
-  const onSubmit = (data: PostInput) => {
-    // Ensure filenames are populated from selected images
-    const submissionData = {
-      ...data,
-      filenames: selectedImages.map((image) => image.name),
-    };
-
-    postPost.mutate(submissionData);
-  };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -221,7 +189,7 @@ const PostSubmitForm = () => {
     <div className="w-full p-4">
       <div className="container mx-auto">
         <Form {...form}>
-          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <form className="space-y-4">
             {/* Title Field (Main textarea with avatar) */}
             <FormField
               name="title"
@@ -401,7 +369,7 @@ const PostSubmitForm = () => {
               </div>
             )}
 
-            {/* Submit Button */}
+            {/* Submit Button
             <Button
               type="submit"
               disabled={
@@ -412,7 +380,7 @@ const PostSubmitForm = () => {
               className="h-10 w-full sm:max-w-32"
             >
               {postPost.isPending ? "Posting..." : "Post"}
-            </Button>
+            </Button> */}
           </form>
         </Form>
       </div>

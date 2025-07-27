@@ -8,9 +8,7 @@ import PostSubmitForm from "./(user)/components/PostSumbitForm";
 const UserHome = () => {
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <div className="text-center">
-        <PostSubmitForm />
-      </div>
+      <div className="text-center">{/* <PostSubmitForm /> */}</div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
