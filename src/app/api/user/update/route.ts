@@ -1,11 +1,11 @@
-import { apiClient } from "@/lib/api/client";
+import { apiClient } from "@/lib/api/backendApiClient";
 import { API_ENDPOINTS } from "@/lib/utils/constants";
 import { NextRequest, NextResponse } from "next/server";
 
-export const PATCH = async (
+export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
-) => {
+) {
   try {
     const body = await request.json();
     const response = await apiClient.patch(
@@ -20,10 +20,13 @@ export const PATCH = async (
     });
   } catch (error) {
     console.error("User update error:", error);
-    return NextResponse.json({
-      success: false,
-      message: "User update failed",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        message: "User update failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
-};
+}

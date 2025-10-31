@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api/client";
+import { apiClient } from "@/lib/api/backendApiClient";
 import { API_ENDPOINTS } from "@/lib/utils/constants";
 import { RefreshTokenResponse } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
@@ -15,11 +15,11 @@ export async function POST(request: NextRequest) {
 
     const nextResponse = NextResponse.json({
       success: true,
-      accessToken,
-      refreshToken,
+      data: { accessToken, refreshToken },
       message: "Token refreshed successfully",
     });
 
+    // Set cookies directly
     nextResponse.cookies.set("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -37,10 +37,13 @@ export async function POST(request: NextRequest) {
     return nextResponse;
   } catch (error) {
     console.error("Refresh token error:", error);
-    return NextResponse.json({
-      success: false,
-      message: "Failed to refresh token",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to refresh token",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 401 }
+    );
   }
 }

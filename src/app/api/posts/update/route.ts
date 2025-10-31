@@ -1,7 +1,6 @@
 import { apiClient } from "@/lib/api/backendApiClient";
 import { API_ENDPOINTS } from "@/lib/utils/constants";
-import { NextRequest } from "next/dist/server/web/spec-extension/request";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
   request: NextRequest,
@@ -10,7 +9,7 @@ export async function PATCH(
   try {
     const body = await request.json();
     const response = await apiClient.patch(
-      `${API_ENDPOINTS.POSTS.UPDATE}/${params.id}`,
+      API_ENDPOINTS.POSTS.UPDATE(params.id),
       body
     );
 
@@ -21,10 +20,13 @@ export async function PATCH(
     });
   } catch (error) {
     console.error("Post update error:", error);
-    return NextResponse.json({
-      success: false,
-      message: "Post update failed",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Post update failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }

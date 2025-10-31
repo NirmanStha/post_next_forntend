@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api/client";
+import { apiClient } from "@/lib/api/backendApiClient";
 import { API_ENDPOINTS } from "@/lib/utils/constants";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,9 +8,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = params;
-    const response = await apiClient.delete(
-      `${API_ENDPOINTS.POSTS.DELETE}/${id}`
-    );
+    const response = await apiClient.delete(API_ENDPOINTS.POSTS.DELETE(id));
 
     return NextResponse.json({
       success: true,
@@ -19,10 +17,13 @@ export async function DELETE(
     });
   } catch (error) {
     console.error("Error deleting post:", error);
-    return NextResponse.json({
-      success: false,
-      message: "Failed to delete post",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to delete post",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }
